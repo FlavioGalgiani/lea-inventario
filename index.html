@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b5564"><meta name="description" content="Catalogo fotografico e conteggi per l’inventario del magazzino LEA.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self'; img-src 'self' blob: data:; connect-src 'self' https://api.github.com https://cdn.jsdelivr.net https://huggingface.co https://*.hf.co https://*.huggingface.co; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
-  <title>LEA · Inventario magazzino</title><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=1.1.0">
+  <title>LEA · Inventario magazzino</title><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css?v=1.1.2">
 </head>
 <body>
 <a class="skip" href="#main">Vai al contenuto</a>
@@ -20,6 +20,7 @@
   <section id="catalog-panel">
     <div class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg><label class="sr-only" for="search">Cerca nel catalogo</label><input id="search" type="search" placeholder="Cerca nome, codice, vecchio codice, misura…" autocomplete="off"><button id="clear-search" class="icon-button" type="button" aria-label="Cancella ricerca">×</button></div>
     <div class="visual-search-bar"><button id="visual-open" class="button primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5 9.5 3h5L16 5h4v15H4V5Z"/><circle cx="12" cy="12" r="4"/></svg>Scatta una foto</button><span>Trova i prodotti dall’aspetto simile</span></div>
+    <div id="visual-active" class="visual-active" hidden><span id="visual-active-label"></span><button id="visual-clear" class="text-button" type="button">Mostra tutto il catalogo</button></div>
     <button id="filters-toggle" class="text-button mobile-filter-toggle" type="button" aria-expanded="false" aria-controls="catalog-filters">Filtri per produttore, misura e stato</button><div id="catalog-filters" class="filters"><label>Produttore<select id="manufacturer"><option value="">Tutti i produttori</option></select></label><label>Misura / caratteristica<input id="dimension" placeholder="Es. DN 80, M8, PN 16" autocomplete="off"></label><label>Stato<select id="item-status"><option value="">Tutto il catalogo</option><option value="counted">Con conteggi</option><option value="uncounted">Senza conteggi</option><option value="verify">Da verificare</option></select></label><button id="reset-filters" class="text-button" type="button">Azzera filtri</button></div>
     <div class="results-toolbar"><p id="result-label" aria-live="polite">Caricamento catalogo…</p><div class="view-toggle" aria-label="Visualizzazione"><button id="photo-view" type="button" class="selected" aria-pressed="true">Foto</button><button id="list-view" type="button" aria-pressed="false">Elenco</button></div></div>
     <div id="photo-notice" class="notice" hidden>Le foto non sono ancora state aggiunte. I collegamenti ai file sono già pronti. <button type="button" id="photo-settings">Gestisci foto</button></div>
@@ -46,6 +47,6 @@
   <p id="visual-results-note" class="dialog-copy"></p><div id="visual-results" class="product-grid visual-results"></div>
   <details id="visual-setup" class="visual-setup"><summary>Preparazione delle foto del catalogo</summary><p class="small-note">Da fare una volta, preferibilmente su PC. Prepara l’indice dalle immagini pubblicate, oppure dalla cartella selezionata nelle Impostazioni. Puoi interrompere e riprendere. Gli altri telefoni possono importare lo stesso indice.</p><div class="visual-actions"><button id="visual-build" class="button secondary" type="button" disabled>Prepara dalle foto del catalogo</button><button id="visual-export" class="button secondary" type="button" disabled>Esporta indice</button><button id="visual-import" class="text-button" type="button" disabled>Importa indice</button></div><input id="visual-index-file" type="file" accept=".json,application/json" hidden><p class="small-note">Per distribuirlo automaticamente, carica il file esportato nel repository dell’app come <strong>data/photo-index.json</strong>. Servono anche le foto in <strong>images/</strong> per visualizzare le proposte.</p></details>
 </dialog>
-<noscript>Per usare l’applicazione è necessario abilitare JavaScript.</noscript><script type="module" src="app.js?v=1.1.1"></script>
+<noscript>Per usare l’applicazione è necessario abilitare JavaScript.</noscript><script type="module" src="app.js?v=1.1.2"></script>
 </body></html>
 

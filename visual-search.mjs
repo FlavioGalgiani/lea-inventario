@@ -6,8 +6,8 @@ import {buildPictureIndex} from './visual-indexer.mjs';
 
 const $=id=>document.getElementById(id);
 export class PhotoSearch {
-  constructor({getGroups,getSource,photo,openFamily,download,encoder=new BrowserVisualEncoder()}){
-    Object.assign(this,{getGroups,getSource,photo,openFamily,download,encoder});this.entries=[];this.busy=false;this.ready=false;this.serial=0;this.queryURL='';this.persistenceWarning='';
+  constructor({getGroups,getSource,photo,openFamily,download,onResults,encoder=new BrowserVisualEncoder()}){
+    Object.assign(this,{getGroups,getSource,photo,openFamily,download,onResults,encoder});this.entries=[];this.busy=false;this.ready=false;this.serial=0;this.queryURL='';this.persistenceWarning='';
   }
   wire(){
     $('settings-dialog').insertAdjacentHTML('beforeend','<hr><h3>Ricerca con una foto</h3><p id="visual-settings-status" class="small-note">Caricamento dell’indice fotografico…</p><button id="visual-settings-open" class="button secondary" type="button">Prepara o importa indice fotografico</button>');
@@ -76,7 +76,11 @@ export class PhotoSearch {
       await this.encoder.load(e=>{if(!signal.aborted)this.modelProgress(e);});if(signal.aborted)return;
       this.queryURL=URL.createObjectURL(file);$('visual-query').hidden=false;$('visual-query').src=this.queryURL;$('visual-query-wrap').hidden=false;
       this.setStatus('Confronto lo scatto con le foto preparate…');const vector=await this.encoder.embed(file);if(signal.aborted)return;
-      const ranked=rankPictures(vector,this.entries,{allowed:this.allowed,limit:8});this.showResults(ranked);this.setStatus('Confronto completato. Scegli una proposta e verifica la misura prima di contare.');
+      const ranked=rankPictures(vector,this.entries,{allowed:this.allowed,limit:8});
+      if(!ranked.length)throw new Error('Nessun articolo candidato trovato. Riprova con un altro scatto.');
+      this.onResults?.(ranked,{strength:resultStrength(ranked)});
+      this.setStatus('Confronto completato. I possibili articoli sono mostrati nel catalogo.');
+      $('visual-dialog').close();
     }catch(e){if(id===this.serial&&!signal.aborted)$('visual-error').textContent=e.message||'Confronto non riuscito. Riprova con un’altra foto.';}finally{this.end(id);}
   }
   showResults(ranked){

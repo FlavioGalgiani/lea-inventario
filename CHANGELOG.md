@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.2 — 17.11.2026
+
+Corretto il flusso della ricerca fotografica: dopo lo scatto, il catalogo principale mostra esclusivamente le famiglie candidate, ordinate per somiglianza. La finestra di elaborazione si chiude automaticamente e un comando dedicato permette di ripristinare l’intero catalogo. Aggiornati gli URL versionati e la cache offline per distribuire la correzione anche ai dispositivi che avevano già aperto l’app.
+
 ## 1.1.0 — 17.11.2026
 
 Aggiunta ricerca da scatto o foto selezionata: CLIP vision quantizzato viene eseguito in un worker nel browser. Propone fino a 8 famiglie ordinate per somiglianza; la scelta apre tutte le varianti della famiglia senza ereditare filtri testuali precedenti. Le dimensioni e il codice restano da confermare.
