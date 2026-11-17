@@ -1,5 +1,5 @@
 import {VERSION,normalize,escapeHTML as esc,numericQuantity,recordKey,makeEvent,mergeEvents,resolveRecords,summary,prepareCatalog,searchCatalog,groupByPicture,imageURL,eventsCSV,readEventsCSV,exportSummary,exportDetails} from './core.mjs';
-import {GitHubCSV,validateConfig} from './github.mjs';
+import {GitHubCSV,validateConfig} from './github.mjs?v=1.0.1';
 import {InventoryStore} from './storage.mjs';
 
 const $=id=>document.getElementById(id),fmt=new Intl.NumberFormat('it-CH',{maximumFractionDigits:6}),dateFmt=new Intl.DateTimeFormat('it-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});

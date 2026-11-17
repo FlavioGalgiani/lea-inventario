@@ -1,4 +1,4 @@
-const CACHE='lea-inventario-1.0.0';
+const CACHE='lea-inventario-1.0.1';
 const SHELL=['./','index.html','styles.css','app.js','core.mjs','github.mjs','storage.mjs','data/catalog.json','icon.svg','manifest.webmanifest','GUIDA.html'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('lea-inventario-')&&k!==CACHE).map(k=>caches.delete(k)))));});

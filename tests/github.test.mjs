@@ -18,3 +18,10 @@ test('repository privato non accessibile non viene confuso con file nuovo',async
 test('token scaduto e rate limit mostrano errore e nessuna scrittura',async()=>{for(const code of [401,429]){const client=new GitHubCSV(config,token,{fetchFn:async()=>json({},code,code===429?{'Retry-After':'60'}:{})});await assert.rejects(client.sync([event()]),e=>e.status===code&&(code!==429||e.retryAfter>=60000));}});
 test('CSV remoto danneggiato interrompe la sincronizzazione senza sovrascriverlo',async()=>{let writes=0;const client=new GitHubCSV(config,token,{fetchFn:async(url,o)=>{if(o.method==='PUT')writes++;return json({type:'file',sha:'1',encoding:'base64',content:Buffer.from('wrong;csv').toString('base64')});}});await assert.rejects(client.sync([event()]));assert.equal(writes,0);});
 test('conflitto persistente ha un numero limitato di tentativi',async()=>{let writes=0;const client=new GitHubCSV(config,token,{maxRetries:3,sleep:async()=>{},fetchFn:async(url,o)=>{if(o.method==='PUT'){writes++;return json({},409);}return json({type:'file',sha:'1',encoding:'base64',content:Buffer.from(eventsCSV([])).toString('base64')});}});await assert.rejects(client.sync([event()]));assert.equal(writes,3);});
+
+test('fetch conserva il contesto nativo del browser',async()=>{
+  const nativeLikeFetch=function(url,options){if(this!==globalThis)throw new TypeError('Illegal invocation');return Promise.resolve(json({ok:true}));};
+  const client=new GitHubCSV(config,token,{fetchFn:nativeLikeFetch});
+  const response=await client.request('https://api.github.com/repos/FlavioGalgiani/lea-inventario');
+  assert.equal(response.status,200);
+});

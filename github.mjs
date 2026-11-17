@@ -8,7 +8,7 @@ export function validateConfig(c){
   return c;
 }
 export class GitHubCSV {
-  constructor(config,token,{fetchFn=globalThis.fetch,sleep=pause,maxRetries=5}={}){this.config=validateConfig(config);if(!token?.trim())throw new Error('Inserisci il token GitHub per questa sessione.');this.token=token.trim();this.fetch=fetchFn;this.sleep=sleep;this.maxRetries=maxRetries;}
+  constructor(config,token,{fetchFn=globalThis.fetch,sleep=pause,maxRetries=5}={}){this.config=validateConfig(config);if(!token?.trim())throw new Error('Inserisci il token GitHub per questa sessione.');this.token=token.trim();this.fetch=fetchFn.bind(globalThis);this.sleep=sleep;this.maxRetries=maxRetries;}
   get endpoint(){const c=this.config;return `https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}/contents/${c.path.split('/').map(encodeURIComponent).join('/')}`;}
   async request(url,options={}){
     let response;try{response=await this.fetch(url,{...options,cache:'no-store',headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${this.token}`,'X-GitHub-Api-Version':'2022-11-28',...options.headers},signal:AbortSignal.timeout(30000)});}catch(e){throw new GitHubError(e.name==='TimeoutError'?'GitHub non risponde: i conteggi restano sul dispositivo.':'Connessione non disponibile: i conteggi restano sul dispositivo.',0);}
