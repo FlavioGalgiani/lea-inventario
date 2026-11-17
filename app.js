@@ -1,11 +1,13 @@
 import {VERSION,normalize,escapeHTML as esc,numericQuantity,recordKey,makeEvent,mergeEvents,resolveRecords,summary,prepareCatalog,searchCatalog,groupByPicture,imageURL,eventsCSV,readEventsCSV,exportSummary,exportDetails} from './core.mjs';
 import {GitHubCSV,validateConfig} from './github.mjs?v=1.0.1';
 import {InventoryStore} from './storage.mjs';
+import {PhotoSearch} from './visual-search.mjs?v=1.1.0';
 
 const $=id=>document.getElementById(id),fmt=new Intl.NumberFormat('it-CH',{maximumFractionDigits:6}),dateFmt=new Intl.DateTimeFormat('it-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const defaults={owner:'FlavioGalgiani',repo:'',branch:'main',path:'conteggi.csv',inventoryId:'LEA-MAG-2026',imageBase:'images/'};
 const state={catalog:[],items:new Map(),groups:new Map(),events:[],pending:[],config:{...defaults},deviceId:'',token:'',operator:'',location:'',tab:'catalog',view:'photo',page:1,filtered:[],family:null,form:null,localImages:new Map(),syncing:false,lastSync:'',syncError:'',pauseUntil:0,storageError:false};
 let toastTimer;const localStore=new InventoryStore(),channel='BroadcastChannel' in window?new BroadcastChannel('lea-inventario-notify'):null;
+const photoSearch=new PhotoSearch({getGroups:()=>state.groups,getSource:name=>state.localImages.get(name)||imageURL(name,state.config.imageBase),photo,openFamily,download});
 const keyFor=c=>'lea.inventory.v1:'+JSON.stringify([c.owner.toLowerCase(),c.repo.toLowerCase(),c.branch,c.path,c.inventoryId]);
 const tokenKey=c=>'lea.token:'+keyFor(c);
 function safeRead(key,fallback){try{const s=localStorage.getItem(key);return s?JSON.parse(s):fallback;}catch(e){state.storageError=true;return fallback;}}
@@ -53,7 +55,7 @@ function renderExport(){const sums=summary(state.events,state.catalog),blocked=s
   $('summary-table').innerHTML=sums.length?`<table><thead><tr><th>CODICE</th><th>ARTICOLO</th><th>UBICAZIONI</th><th>QUANTITÀ</th><th>STATO</th></tr></thead><tbody>${sums.map(s=>`<tr><td class="code">${esc(s.code)}</td><td>${esc(s.item?.name??'Articolo fuori catalogo')}</td><td>${s.records.length}</td><td class="numeric">${s.total===null?'—':fmt.format(s.total)} ${esc(s.units.join(' / '))}</td><td>${esc(s.status)}</td></tr>`).join('')}</tbody></table>`:'';
 }
 function renderAll(){updateMetrics();updateSync();renderCatalog();if(state.tab==='counts')renderCounts();if(state.tab==='export')renderExport();}
-function openFamily(key){const group=state.groups.get(key);if(!group)return;state.family=group;$('family-title').textContent=group.label;$('family-image').innerHTML=photo(group.picture,{large:true});$('family-file').textContent=group.picture||'Nessuna foto associata';$('zoom-button').disabled=!group.picture;$('variant-search').value=[$('search').value,$('dimension').value].filter(Boolean).join(' ');renderVariants();$('family-dialog').showModal();}
+function openFamily(key,{query=null}={}){const group=state.groups.get(key);if(!group)return;state.family=group;$('family-title').textContent=group.label;$('family-image').innerHTML=photo(group.picture,{large:true});$('family-file').textContent=group.picture||'Nessuna foto associata';$('zoom-button').disabled=!group.picture;$('variant-search').value=query??[$('search').value,$('dimension').value].filter(Boolean).join(' ');renderVariants();$('family-dialog').showModal();}
 function renderVariants(){if(!state.family)return;const found=searchCatalog(state.family.items,{query:$('variant-search').value}),counted=new Set(allRecords().map(r=>r.item_code));$('variant-count').textContent=`${found.length} ${found.length===1?'variante trovata':'varianti trovate'} su ${state.family.items.length}. Conferma sempre le caratteristiche tecniche.`;
   $('variant-list').innerHTML=found.length?found.map(i=>`<article class="variant-card"><div class="variant-top"><div><span class="code">${esc(i.code)}</span><h3>${esc(i.name)}</h3></div>${counted.has(i.code)?'<span class="badge">Con conteggi</span>':''}</div><p class="specs">${esc(i.dim1)}${i.dim1&&i.dim2?' · ':''}${esc(i.dim2)}</p><p class="article-meta">Vecchio codice: <strong>${esc(i.oldCode||'—')}</strong><br>Codice produttore: <strong>${esc(i.manufacturerCode||'—')}</strong>${i.model?` · Modello ${esc(i.model)}`:''}<br>${esc(i.manufacturer)}</p><div class="variant-actions">${/^https?:\/\//i.test(i.url)?`<a class="supplier-link" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer">Scheda produttore ↗</a>`:'<span></span>'}<button type="button" class="button primary" data-count="${esc(i.code)}">Conta questa variante</button></div></article>`).join(''):'<div class="empty">Nessuna variante corrispondente. Cancella il filtro per vederle tutte.</div>';
 }
@@ -83,6 +85,7 @@ async function importPhotos(files){const incoming=new Map();for(const f of files
   $('photo-import-status').textContent=`${found} foto associate su 853 riferimenti. La selezione locale vale finché questa pagina resta aperta. Per tutti gli smartphone aggiungi i file alla cartella images/ su GitHub.`;$('photo-notice').hidden=found===853;renderCatalog();if(state.family&&$('family-dialog').open)$('family-image').innerHTML=photo(state.family.picture,{large:true});toast(`${found} foto associate per questa sessione.`);
 }
 function wire(){
+  photoSearch.wire();
   for(const tab of ['catalog','counts','export'])$(`${tab}-tab`).addEventListener('click',()=>showTab(tab));
   let searchTimer;for(const id of ['search','dimension'])$(id).addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>renderCatalog(true),100);});
   for(const id of ['manufacturer','item-status'])$(id).addEventListener('change',()=>renderCatalog(true));
@@ -111,6 +114,7 @@ function wire(){
 async function init(){
   wire();try{const prefs=safeRead('lea.preferences',{}),publicConfig=await fetch('config.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}));state.config={...defaults,...publicConfig,...prefs.config};state.operator=prefs.operator??'';state.location=prefs.location??'';state.deviceId=safeRead('lea.device',null)||crypto.randomUUID();try{localStorage.setItem('lea.device',JSON.stringify(state.deviceId));}catch{}state.token=loadToken();const loaded=await loadState(state.config);Object.assign(state,loaded);
     const response=await fetch('data/catalog.json');if(!response.ok)throw new Error('Catalogo non disponibile. Verifica che la cartella data/ sia stata caricata.');const data=await response.json();state.catalog=prepareCatalog(data.items);state.items=new Map(state.catalog.map(i=>[i.code,i]));state.groups=new Map(groupByPicture(state.catalog).map(g=>[g.key,g]));const names=[...new Set(state.catalog.map(i=>i.manufacturer))].sort((a,b)=>a.localeCompare(b));$('manufacturer').innerHTML='<option value="">Tutti i produttori</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');renderAll();if(state.storageError)toast('Il salvataggio locale non è disponibile. I conteggi richiedono una sessione normale con spazio locale abilitato.');
+    photoSearch.init(new URL(state.config.imageBase,location.href).href).catch(()=>toast('Ricerca fotografica non disponibile. Puoi continuare con la ricerca per nome e codice.'));
     const first=state.catalog.find(i=>i.picture),probe=new Image();probe.onerror=()=>$('photo-notice').hidden=false;probe.src=imageURL(first.picture,state.config.imageBase);
     if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
     setInterval(()=>{if(!document.hidden)sync({silent:true});},60000);if(state.config.repo&&state.token)sync({silent:true});

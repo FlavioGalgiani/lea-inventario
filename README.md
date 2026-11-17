@@ -12,7 +12,19 @@ Applicazione statica per un inventario una tantum, su GitHub Pages e smartphone.
 - Salvataggio locale prima dell’invio, backup JSON, import con deduplicazione, sincronizzazione ogni 60 secondi mentre la pagina è attiva e invio manuale.
 - CSV condiviso con revisioni immutabili, rilevamento conflitti e risoluzione esplicita. Nessuna scelta automatica dell’ultima modifica.
 - Riepilogo e dettaglio CSV UTF-8 con BOM e separatore `;`, apribili in Excel. Totali bloccati quando ci sono conflitti o unità diverse. Le quantità da verificare restano provvisorie e sono etichettate.
-- La ricerca fotografica consiste nello sfogliare e selezionare le foto di catalogo. Il riconoscimento automatico da una foto scattata non è implementato: era un’eventuale evoluzione da verificare con le foto reali.
+- Ricerca da fotocamera o foto scelta: confronto visivo nel browser e fino a 8 famiglie proposte, poi conferma della variante. La similarità non certifica articolo o misura. Non modifica i conteggi automaticamente.
+
+## Ricerca da una foto · v1.1.0
+
+1. Pubblicare le 853 immagini originali in `images/`, mantenendo i nomi. Al momento non sono state fornite: l’indice condiviso iniziale è vuoto e i pulsanti di scatto restano disabilitati finché non ci sono foto preparate.
+2. Da PC, aprire «Scatta una foto» → «Preparazione delle foto del catalogo» → «Prepara dalle foto del catalogo». In alternativa, selezionare la cartella locale in Impostazioni e aprire «Prepara o importa indice fotografico». La cartella locale non viene pubblicata e va riselezionata se si ricarica la pagina.
+3. La prima preparazione scarica un modello di circa 90 MB, poi elabora un’immagine per volta. Usare Wi-Fi, lasciare la pagina aperta; «Interrompi» conserva i risultati completati. Riprendendo, gli hash SHA-256 evitano di rielaborare foto identiche. I vettori restano in un archivio IndexedDB separato dai conteggi.
+4. Premere «Esporta indice» e caricare il file come `data/photo-index.json` nel repository dell’app. I telefoni lo leggono automaticamente all’apertura; in alternativa ogni dispositivo può importare lo stesso JSON. L’indice contiene nomi, hash e vettori delle foto di catalogo, senza token, conteggi o scatti degli operatori.
+5. Sul telefono: «Scatta una foto» → «Scatta dal telefono» oppure «Scegli una foto». Confronto locale, proposte ordinate per somiglianza e scelta di misura/codice. Uno sfondo semplice, buona luce e un solo pezzo aiutano. Le varianti che condividono la foto non si distinguono automaticamente.
+
+Il modello viene eseguito in un Web Worker con Transformers.js 3.8.1 e CLIP vision quantizzato, revisione fissata nel codice. Si scaricano libreria, runtime e pesi da jsDelivr / Hugging Face; gli scatti vengono elaborati nel dispositivo, senza inviarli a servizi AI o salvarli su GitHub. L’uso successivo può sfruttare la cache del browser, ma la modalità fotografica offline dipende dalla disponibilità locale del modello: non è garantita. Un browser recente con WebAssembly e spazio sufficiente è necessario; l’errore del modello non blocca ricerca testuale o conteggi.
+
+La prova tecnica con modello reale è riuscita su disegni di controllo. L’accuratezza sul magazzino e le prestazioni su smartphone fisici restano da verificare con le foto reali. Nessun disegno di prova è incluso nel catalogo pubblicato.
 
 ## Messa online
 
