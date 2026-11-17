@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.0.2 — 17.11.2026
+
+Rimosso il riquadro Operatore / Zona di lavoro dalla pagina principale. Nome e ubicazione si indicano nel modulo del conteggio e sono ricordati per la registrazione successiva. Le azioni di eliminazione e risoluzione conflitti richiedono il nome solo se non è ancora stato indicato sul dispositivo.
+
 ## 1.0.1 — 17.11.2026
 
 Corretto il collegamento a GitHub nel browser: la funzione nativa fetch conserva ora il proprio contesto Window. Prima la chiamata poteva fallire con Illegal invocation prima di inviare la richiesta e veniva mostrato un errore di connessione.
