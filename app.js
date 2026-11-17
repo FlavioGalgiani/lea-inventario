@@ -1,7 +1,7 @@
 import {VERSION,normalize,escapeHTML as esc,numericQuantity,recordKey,makeEvent,mergeEvents,resolveRecords,summary,prepareCatalog,searchCatalog,groupByPicture,imageURL,eventsCSV,readEventsCSV,exportSummary,exportDetails} from './core.mjs';
 import {GitHubCSV,validateConfig} from './github.mjs?v=1.0.1';
 import {InventoryStore} from './storage.mjs';
-import {PhotoSearch} from './visual-search.mjs?v=1.1.0';
+import {PhotoSearch} from './visual-search.mjs?v=1.1.1';
 
 const $=id=>document.getElementById(id),fmt=new Intl.NumberFormat('it-CH',{maximumFractionDigits:6}),dateFmt=new Intl.DateTimeFormat('it-CH',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const defaults={owner:'FlavioGalgiani',repo:'',branch:'main',path:'conteggi.csv',inventoryId:'LEA-MAG-2026',imageBase:'images/'};
@@ -121,3 +121,4 @@ async function init(){
   }catch(e){$('results').className='article-list';$('results').innerHTML=`<div class="empty"><strong>Avvio non completato</strong>${esc(e.message)}</div>`;$('result-label').textContent='Catalogo non caricato';toast(e.message);}
 }
 init();
+

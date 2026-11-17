@@ -11,10 +11,10 @@ export class PhotoSearch {
   }
   wire(){
     $('settings-dialog').insertAdjacentHTML('beforeend','<hr><h3>Ricerca con una foto</h3><p id="visual-settings-status" class="small-note">Caricamento dell’indice fotografico…</p><button id="visual-settings-open" class="button secondary" type="button">Prepara o importa indice fotografico</button>');
-    $('visual-open').addEventListener('click',()=>this.open());
+    $('visual-open').addEventListener('click',()=>$('visual-camera-file').click());
     $('visual-settings-open').addEventListener('click',()=>{$('settings-dialog').close();this.open(true);});
     for(const [button,input] of [['visual-camera','visual-camera-file'],['visual-gallery','visual-gallery-file'],['visual-import','visual-index-file']])$(button).addEventListener('click',()=>$(input).click());
-    for(const id of ['visual-camera-file','visual-gallery-file'])$(id).addEventListener('change',e=>{const file=e.target.files[0];e.target.value='';if(file)this.search(file);});
+    for(const id of ['visual-camera-file','visual-gallery-file'])$(id).addEventListener('change',e=>{const file=e.target.files[0];e.target.value='';if(file){this.open();this.search(file);}});
     $('visual-index-file').addEventListener('change',e=>{const file=e.target.files[0];e.target.value='';if(file)this.importIndex(file);});
     $('visual-build').addEventListener('click',()=>this.build());
     $('visual-export').addEventListener('click',()=>this.download('photo-index.json',JSON.stringify(createVisualIndex(this.entries)),'application/json'));
@@ -33,12 +33,17 @@ export class PhotoSearch {
     const n=this.entries.length,total=this.allowed?.size??0,label=this.ready?`${n} foto pronte su ${total} riferimenti.`:'Caricamento dell’indice fotografico…';
     for(const id of ['visual-index-status','visual-settings-status'])$(id).textContent=label;
     $('visual-index-help').textContent=n?`La ricerca confronta solo le ${n} foto preparate. Conferma sempre famiglia, diametro, lunghezza e filettatura.`:'Prima di cercare serve preparare le foto del catalogo, oppure importare l’indice creato su un altro PC. Aggiungi le foto originali alla cartella images/ su GitHub o selezionale nelle Impostazioni.';
-    for(const id of ['visual-camera','visual-gallery'])$(id).disabled=this.busy||!this.ready||!n;
+    for(const id of ['visual-camera','visual-gallery'])$(id).disabled=this.busy;
     for(const id of ['visual-build','visual-import'])$(id).disabled=this.busy||!this.ready;
     $('visual-export').disabled=this.busy||!n;$('visual-cancel').hidden=!this.busy;
     if(this.persistenceWarning)$('visual-storage-warning').textContent=this.persistenceWarning;
   }
-  open(setup=false){if(!this.entries.length||setup)$('visual-setup').open=true;$('visual-dialog').showModal();this.renderStatus();}
+  open(setup=false){
+    for(const id of ['visual-index-status','visual-index-help','visual-storage-warning','visual-setup'])$(id).hidden=!setup;
+    $('visual-setup').open=setup;
+    if(!$('visual-dialog').open)$('visual-dialog').showModal();
+    this.renderStatus();
+  }
   setStatus(text){$('visual-progress').textContent=text;}
   modelProgress(e){const pct=Number.isFinite(e.progress)?` ${Math.round(e.progress)}%`:'';this.setStatus(`Preparazione del modello sul dispositivo…${pct} Al primo utilizzo scarica circa 90 MB; la foto resta su questo dispositivo.`);}
   begin(){if(this.busy)return null;this.busy=true;const id=++this.serial;this.abort=new AbortController();$('visual-cancel').disabled=false;$('visual-error').textContent='';this.renderStatus();return id;}
@@ -83,3 +88,4 @@ export class PhotoSearch {
     try{if(file.size>30*1024*1024)throw new Error('Il file indice supera 30 MB.');const index=validateVisualIndex(JSON.parse(await file.text()),this.allowed);if(!index.entries.length)throw new Error('Questo indice non contiene foto del catalogo attuale.');if(signal.aborted)return;await this.saveIndex(createVisualIndex(mergeVisualEntries(this.entries,index.entries)));if(signal.aborted)return;this.clearPreview();this.setStatus(`${index.entries.length} foto importate. Ora puoi scattare o scegliere una foto.`);}catch(e){if(id===this.serial&&!signal.aborted)$('visual-error').textContent=e instanceof SyntaxError?'Il file non è un indice JSON valido.':e.message;}finally{this.end(id);}
   }
 }
+
