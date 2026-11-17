@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.3 — 17.11.2026
+
+Rimossa la ricerca fotografica e il relativo caricamento del modello. Restano disponibili le foto di riferimento del catalogo, la ricerca per nome e codice, i filtri e i conteggi.
+
 ## 1.1.2 — 17.11.2026
 
 Corretto il flusso della ricerca fotografica: dopo lo scatto, il catalogo principale mostra esclusivamente le famiglie candidate, ordinate per somiglianza. La finestra di elaborazione si chiude automaticamente e un comando dedicato permette di ripristinare l’intero catalogo. Aggiornati gli URL versionati e la cache offline per distribuire la correzione anche ai dispositivi che avevano già aperto l’app.
