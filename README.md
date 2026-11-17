@@ -1,0 +1,2 @@
+# lea-inventario
+Inventario LEA
