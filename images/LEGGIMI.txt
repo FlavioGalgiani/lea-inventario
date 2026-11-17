@@ -1,0 +1,4 @@
+Inserire qui le 853 immagini reali indicate in data/immagini_attese.csv.
+Mantenere esattamente il nome del file, comprese maiuscole e minuscole.
+Non rinominare le foto per singolo articolo: la stessa immagine è collegata alle diverse varianti.
+Le immagini non erano incluse nell’allegato ricevuto e non sono state sostituite con foto generiche.

@@ -1,0 +1,53 @@
+INVENTARIO MAGAZZINO LEA — VERSIONE 1.0.0
+Verifiche del 16.11.2026
+
+DATI
+8’875 articoli importati dall’Excel ricevuto, 8’875 codici univoci.
+853 nomi immagini distinti. Un articolo non ha riferimento immagine.
+Descrizioni, dimensioni, codici LEA, vecchi codici, codici produttore e link preservati.
+Il valore produttore #N/A è presentato come «Non indicato».
+Unità, quantità e ubicazioni non erano presenti e non sono state inventate.
+
+TEST AUTOMATICI
+41 test, 41 superati, nessun test fallito o saltato.
+Comando riproducibile: npm test. Nessuna dipendenza da installare.
+Controllo sintattico dei cinque moduli/script applicativi superato.
+
+Copertura:
+- Completezza dell’anagrafica e raggruppamento delle immagini.
+- Ricerca per parole combinate, DN con/senza spazio, produttore e caratteristiche.
+- Ricerca codice attuale, precedente e produttore; numeri non confusi con cifre interne ad altri codici.
+- Quantità decimali con virgola, zero esplicito, valori negativi e formule rifiutati.
+- Totali per ubicazioni, sostituzione della revisione precedente, eliminazione e ricreazione.
+- Conflitti di creazione, modifica ed eliminazione; risoluzione esplicita.
+- Unità differenti non sommate; stato da verificare mantenuto.
+- CSV con virgolette, separatori, più righe, apostrofi, accenti e protezione delle formule.
+- Dati di recupero incompleti o incoerenti rifiutati.
+- Sincronizzazione con API GitHub SIMULATA: file nuovo, lettura, merge, conflitto SHA e ripetizione limitata.
+- Invio idempotente, perdita di connessione dopo commit, token scaduto, limiti GitHub e CSV remoto corrotto.
+- Lettura autenticata alternativa per CSV non fornito inline dall’API.
+- Merge locale tra schede e conservazione delle modifiche arrivate durante l’invio.
+
+VERIFICA NEL BROWSER
+Chrome desktop: avvio, ricerca «saracinesca DN80», scelta A15004 tra le varianti della Fig. 5007.
+Inserimento di un conteggio 2,5 pz; modifica a 3 pz; verifica totale 3, senza sommare il valore precedente.
+Ricaricamento della pagina: conteggio recuperato.
+Impaginazione stretta: iframe 390 × 844 px (larghezza utile 375 px per via della barra di scorrimento).
+Nessun allargamento orizzontale del documento rilevato nel controllo effettuato.
+Ricerca per A15004, selezione variante e modulo di conteggio leggibili nel formato stretto.
+Salvataggio di una nuova revisione a 4 pz, ricaricamento e totale 4 confermati dopo il passaggio all’archivio locale IndexedDB.
+I dati di prova sono solo nel browser di controllo, non nel pacchetto e non su GitHub.
+
+DA COMPLETARE CON I DATI REALI
+Le foto non sono state allegate: il pacchetto contiene riferimenti, gestione foto e lista dei nomi attesi, non immagini sostitutive.
+Nessun repository di destinazione è stato indicato o creato; nessun token reale è stato ricevuto o generato.
+Non è stato eseguito un test di scrittura sul GitHub reale né un test su due smartphone fisici.
+La verifica in formato stretto non sostituisce un controllo sul browser effettivamente usato dai collaboratori.
+La sincronizzazione reale va convalidata dopo la configurazione del repository privato e dei token temporanei.
+
+LIMITI OPERATIVI
+L’operatore deve distinguere «salvato sul dispositivo» da «confermato su GitHub».
+Invio automatico ogni 60 secondi solo con pagina attiva, connessione e token presenti; invio manuale disponibile.
+I conteggi salvati restano sul dispositivo se l’invio fallisce. Una copia JSON consente recupero e importazione.
+Le foto non ancora caricate possono non essere disponibili senza rete.
+La ricerca con foto è un catalogo visuale con scelta della variante; non include riconoscimento automatico da fotocamera.
