@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.7 — 18.11.2026
+
+Dopo il salvataggio di un conteggio avviato dalla scelta della variante, l’app chiude entrambe le finestre, torna al catalogo e azzera ricerca e filtri per il prodotto successivo. Le modifiche avviate dalla sezione Conteggi restano invece nella sezione corrente.
+
 ## 1.1.6 — 18.11.2026
 
 Semplificato il modulo di conteggio: rimossi dalla compilazione visibile ubicazione, operatore e stato. I nuovi conteggi usano automaticamente l’ubicazione «Magazzino», un identificativo stabile del telefono come operatore e lo stato «Contati».

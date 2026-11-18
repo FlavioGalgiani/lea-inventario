@@ -1,1 +1,1 @@
-{"name":"lea-inventario","version":"1.1.6","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","check":"node --check app.js && node --check core.mjs && node --check github.mjs && node --check storage.mjs && node --check sw.js"}}
+{"name":"lea-inventario","version":"1.1.7","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","check":"node --check app.js && node --check core.mjs && node --check github.mjs && node --check storage.mjs && node --check sw.js"}}
