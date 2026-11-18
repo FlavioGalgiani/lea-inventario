@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.6 — 18.11.2026
+
+Semplificato il modulo di conteggio: rimossi dalla compilazione visibile ubicazione, operatore e stato. I nuovi conteggi usano automaticamente l’ubicazione «Magazzino», un identificativo stabile del telefono come operatore e lo stato «Contati».
+
 ## 1.1.5 — 18.11.2026
 
 Compattata ulteriormente la schermata smartphone: titolo e statistiche sono nascosti nella vista operativa, testata e barra di sincronizzazione sono più basse, mentre tab, ricerca e filtri usano margini ridotti. Il primo articolo compare molto più in alto senza modificare il layout desktop.
