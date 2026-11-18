@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.4 — 18.11.2026
+
+Ottimizzata la schermata smartphone: intestazione e spaziature più compatte, statistiche in griglia 2 × 2, schede di navigazione distribuite sulla larghezza e prodotti presentati come schede orizzontali leggibili a una colonna. La visualizzazione desktop resta invariata.
+
 ## 1.1.3 — 17.11.2026
 
 Rimossa la ricerca fotografica e il relativo caricamento del modello. Restano disponibili le foto di riferimento del catalogo, la ricerca per nome e codice, i filtri e i conteggi.
