@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.5 — 18.11.2026
+
+Compattata ulteriormente la schermata smartphone: titolo e statistiche sono nascosti nella vista operativa, testata e barra di sincronizzazione sono più basse, mentre tab, ricerca e filtri usano margini ridotti. Il primo articolo compare molto più in alto senza modificare il layout desktop.
+
 ## 1.1.4 — 18.11.2026
 
 Ottimizzata la schermata smartphone: intestazione e spaziature più compatte, statistiche in griglia 2 × 2, schede di navigazione distribuite sulla larghezza e prodotti presentati come schede orizzontali leggibili a una colonna. La visualizzazione desktop resta invariata.
