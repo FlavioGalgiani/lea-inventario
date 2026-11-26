@@ -21,7 +21,23 @@ function download(name,content,type='text/plain;charset=utf-8'){const url=URL.cr
 function fileStamp(){return new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');}
 function safeName(s){return String(s).replace(/[^A-Za-z0-9_.-]/g,'_');}
 function backup(){return {format:'lea-inventario',version:1,inventoryId:state.config.inventoryId,createdAt:new Date().toISOString(),events:state.events};}
-function allRecords(){return resolveRecords(state.events);}
+// Indice ricalcolato solo quando cambia l'archivio: l'apertura di una variante e' immediata.
+let recordIndex={source:null,all:[],active:[],byId:new Map(),activeById:new Map(),counted:new Set(),unitsByCode:new Map()};
+function getRecordIndex(){
+  if(recordIndex.source===state.events)return recordIndex;
+  const all=resolveRecords(state.events,{includeDeleted:true});
+  const active=all.filter(r=>r.conflict||r.current?.status!=='deleted');
+  const counted=new Set(),unitsByCode=new Map();
+  for(const r of active){
+    counted.add(r.item_code);
+    if(!unitsByCode.has(r.item_code))unitsByCode.set(r.item_code,new Set());
+    const units=unitsByCode.get(r.item_code);
+    for(const event of r.heads)if(event.status!=='deleted')units.add(event.unit);
+  }
+  recordIndex={source:state.events,all,active,byId:new Map(all.map(r=>[r.id,r])),activeById:new Map(active.map(r=>[r.id,r])),counted,unitsByCode};
+  return recordIndex;
+}
+function allRecords(){return getRecordIndex().active;}
 function statusBadge(record){return record.conflict?'<span class="badge conflict">Conflitto</span>':record.current.status==='verify'?'<span class="badge review">Da verificare</span>':'<span class="badge">Contati</span>';}
 function updateMetrics(){const sums=summary(state.events,state.catalog);$('catalog-total').textContent=fmt.format(state.catalog.length);$('image-total').textContent=fmt.format(new Set(state.catalog.map(i=>i.picture).filter(Boolean)).size);$('count-total').textContent=fmt.format(sums.length);$('review-total').textContent=fmt.format(sums.filter(s=>s.status!=='Contati').length);$('counts-badge').textContent=fmt.format(allRecords().length);}
 function updateSync(){const strip=$('sync-strip');strip.className='sync-strip';$('network-label').textContent=navigator.onLine?'Online':'Senza rete';
@@ -36,7 +52,7 @@ function placeholder(name){return `<span class="missing-image"><svg viewBox="0 0
 function photo(name,{large=false}={}){const src=state.localImages.get(name)||imageURL(name,state.config.imageBase);return `<div class="product-photo">${src?`<img src="${esc(src)}" alt="${esc(name?'Foto di riferimento del prodotto':'Foto non disponibile')}" ${large?'':'loading="lazy"'} decoding="async"><span class="missing-image" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="7" width="32" height="34" rx="4"/><circle cx="18" cy="18" r="4"/><path d="m10 35 10-11 8 7 5-5 6 9"/></svg><small>${esc(name)}</small></span>`:placeholder(name)}</div>`;}
 document.addEventListener('error',event=>{if(event.target.tagName==='IMG'){event.target.hidden=true;const p=event.target.nextElementSibling;if(p)p.hidden=false;}},true);
 function manufacturerLabel(g){return [...g.manufacturers].filter(Boolean).slice(0,2).join(' / ');}
-function renderCatalog(reset=false){if(reset)state.page=1;const filters={query:$('search').value,manufacturer:$('manufacturer').value,dimension:$('dimension').value,status:$('item-status').value,events:state.events};state.filtered=searchCatalog(state.catalog,filters);const groups=groupByPicture(state.filtered),isPhoto=state.view==='photo',list=isPhoto?groups:state.filtered,pageSize=isPhoto?24:40,visible=list.slice(0,state.page*pageSize),counted=new Set(allRecords().map(r=>r.item_code));
+function renderCatalog(reset=false){if(reset)state.page=1;const filters={query:$('search').value,manufacturer:$('manufacturer').value,dimension:$('dimension').value,status:$('item-status').value,events:state.events};state.filtered=searchCatalog(state.catalog,filters);const groups=groupByPicture(state.filtered),isPhoto=state.view==='photo',list=isPhoto?groups:state.filtered,pageSize=isPhoto?24:40,visible=list.slice(0,state.page*pageSize),counted=getRecordIndex().counted;
   const activeFilters=[filters.manufacturer,filters.dimension,filters.status].filter(Boolean).length;$('filters-toggle').textContent=activeFilters?`Filtri di ricerca (${activeFilters} attivi)`:'Filtri per produttore, misura e stato';
   $('results').className=isPhoto?'product-grid':'article-list';$('photo-view').classList.toggle('selected',isPhoto);$('list-view').classList.toggle('selected',!isPhoto);$('photo-view').setAttribute('aria-pressed',String(isPhoto));$('list-view').setAttribute('aria-pressed',String(!isPhoto));
   $('result-label').textContent=`${fmt.format(state.filtered.length)} articoli${isPhoto?` · ${fmt.format(groups.length)} prodotti fotografici`:''}${list.length>visible.length?` · mostrati ${visible.length}`:''}`;
@@ -54,16 +70,43 @@ function renderExport(){const sums=summary(state.events,state.catalog),blocked=s
 }
 function renderAll(){updateMetrics();updateSync();renderCatalog();if(state.tab==='counts')renderCounts();if(state.tab==='export')renderExport();}
 function openFamily(key,{query=null}={}){const group=state.groups.get(key);if(!group)return;state.family=group;$('family-title').textContent=group.label;$('family-image').innerHTML=photo(group.picture,{large:true});$('family-file').textContent=group.picture||'Nessuna foto associata';$('zoom-button').disabled=!group.picture;$('variant-search').value=query??[$('search').value,$('dimension').value].filter(Boolean).join(' ');renderVariants();$('family-dialog').showModal();}
-function renderVariants(){if(!state.family)return;const found=searchCatalog(state.family.items,{query:$('variant-search').value}),counted=new Set(allRecords().map(r=>r.item_code)),remaining=state.family.items.filter(i=>!counted.has(i.code)).length;$('variant-count').textContent=`${found.length} ${found.length===1?'variante trovata':'varianti trovate'} su ${state.family.items.length}. ${remaining} ${remaining===1?'variante ancora da conteggiare':'varianti ancora da conteggiare'}. Conferma sempre le caratteristiche tecniche.`;
+function renderVariants(){if(!state.family)return;const found=searchCatalog(state.family.items,{query:$('variant-search').value}),counted=getRecordIndex().counted,remaining=state.family.items.filter(i=>!counted.has(i.code)).length;$('variant-count').textContent=`${found.length} ${found.length===1?'variante trovata':'varianti trovate'} su ${state.family.items.length}. ${remaining} ${remaining===1?'variante ancora da conteggiare':'varianti ancora da conteggiare'}. Conferma sempre le caratteristiche tecniche.`;
   $('variant-list').innerHTML=found.length?found.map(i=>`<article class="variant-card${counted.has(i.code)?' has-counts':''}"><div class="variant-top"><div><span class="code">${esc(i.code)}</span><h3>${esc(i.name)}</h3></div>${counted.has(i.code)?'<span class="badge">Con conteggi</span>':''}</div><p class="specs">${esc(i.dim1)}${i.dim1&&i.dim2?' · ':''}${esc(i.dim2)}</p><p class="article-meta">Vecchio codice: <strong>${esc(i.oldCode||'—')}</strong><br>Codice produttore: <strong>${esc(i.manufacturerCode||'—')}</strong>${i.model?` · Modello ${esc(i.model)}`:''}<br>${esc(i.manufacturer)}</p><div class="variant-actions">${/^https?:\/\//i.test(i.url)?`<a class="supplier-link" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer">Scheda produttore ↗</a>`:'<span></span>'}<button type="button" class="button primary" data-count="${esc(i.code)}">Conta questa variante</button></div></article>`).join(''):'<div class="empty">Nessuna variante corrispondente. Cancella il filtro per vederle tutte.</div>';
 }
 function setUnit(unit){const standard=['pz','m','kg','l','conf','set'];$('count-unit').value=standard.includes(unit)?unit:unit?'altro':'';$('custom-unit').value=standard.includes(unit)?'':unit;$('custom-unit-wrap').hidden=$('count-unit').value!=='altro';$('custom-unit').required=$('count-unit').value==='altro';}
-function openCount(code,recordId=null){const item=state.items.get(code);if(!item)return;const record=recordId?allRecords().find(r=>r.id===recordId):null;if(record?.conflict){openConflict(recordId);return;}
-  const old=record?.current,location=old?.location??'Magazzino',operator=`Telefono ${state.deviceId.slice(0,8)}`;state.form={code,locked:!!old,key:'',parents:[]};$('count-title').textContent=item.name;$('count-item-info').innerHTML=`<strong>${esc(item.code)}</strong> · ${esc(item.dim1)} · ${esc(item.dim2)}<br>Vecchio codice: ${esc(item.oldCode||'—')} · Codice produttore: ${esc(item.manufacturerCode||'—')}`;$('count-location').value=location;$('count-operator').value=operator;$('count-quantity').value=old?.quantity??'';const sameUnit=summary(state.events,state.catalog).find(s=>s.code===code)?.units;setUnit(old?.unit??(sameUnit?.length===1?sameUnit[0]:'pz'));$('count-state').value='counted';$('count-note').value=old?.note??'';$('count-error').textContent='';$('save-count').disabled=false;updateExistingWarning();$('count-dialog').showModal();setTimeout(()=>$('count-quantity').focus(),60);}
-function updateExistingWarning(){if(!state.form)return;const key=recordKey(state.form.code,$('count-location').value);if(state.form.key!==key){state.form.key=key;const record=resolveRecords(state.events,{includeDeleted:true}).find(r=>r.id===key);state.form.parents=record?.heads.map(e=>e.event_id)??[];state.form.conflict=record?.conflict??false;const current=record?.current;$('count-mode-label').textContent=current&&current.status!=='deleted'?'AGGIORNA CONTEGGIO':'NUOVO CONTEGGIO';$('existing-warning').hidden=!record||current?.status==='deleted';$('existing-warning').textContent=record?.conflict?'Questa ubicazione ha versioni in conflitto. Chiudi questa scheda e risolvi il conflitto nella sezione Conteggi.':current?`Esiste già un conteggio: ${fmt.format(numericQuantity(current.quantity))} ${current.unit}, registrato da ${current.operator}. Inserisci il nuovo TOTALE per questa ubicazione: non verrà sommato al precedente.`:'';$('save-count').disabled=!!record?.conflict;}}
+// Feedback visibile prima di qualsiasi lavoro, con protezione dai doppi clic.
+let openingCount=false;
+async function requestCount(button,code,recordId=null){
+  if(!button||openingCount||$('count-dialog').open)return;
+  openingCount=true;
+  const originalLabel=button.textContent,fromFamily=!!button.closest('#variant-list'),familyKey=state.family?.key;
+  button.disabled=true;
+  button.classList.add('is-opening');
+  button.setAttribute('aria-busy','true');
+  button.textContent='Apertura…';
+  try{
+    // Due frame garantiscono che il feedback si disegni anche sui telefoni meno veloci.
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(fromFamily&&(!$('family-dialog').open||state.family?.key!==familyKey))return;
+    if(!$('count-dialog').open)openCount(code,recordId);
+  }catch(error){
+    toast('Impossibile aprire il conteggio: '+error.message);
+  }finally{
+    openingCount=false;
+    if(button.isConnected){
+      button.disabled=false;
+      button.classList.remove('is-opening');
+      button.removeAttribute('aria-busy');
+      button.textContent=originalLabel;
+    }
+  }
+}
+function openCount(code,recordId=null){const item=state.items.get(code);if(!item)return;const record=recordId?getRecordIndex().activeById.get(recordId):null;if(record?.conflict){openConflict(recordId);return;}
+  const old=record?.current,location=old?.location??'Magazzino',operator=`Telefono ${state.deviceId.slice(0,8)}`;state.form={code,locked:!!old,key:'',parents:[]};$('count-title').textContent=item.name;$('count-item-info').innerHTML=`<strong>${esc(item.code)}</strong> · ${esc(item.dim1)} · ${esc(item.dim2)}<br>Vecchio codice: ${esc(item.oldCode||'—')} · Codice produttore: ${esc(item.manufacturerCode||'—')}`;$('count-location').value=location;$('count-operator').value=operator;$('count-quantity').value=old?.quantity??'';const sameUnit=getRecordIndex().unitsByCode.get(code);setUnit(old?.unit??(sameUnit?.size===1?sameUnit.values().next().value:'pz'));$('count-state').value='counted';$('count-note').value=old?.note??'';$('count-error').textContent='';$('save-count').disabled=false;updateExistingWarning();$('count-dialog').showModal();setTimeout(()=>$('count-quantity').focus(),60);}
+function updateExistingWarning(){if(!state.form)return;const key=recordKey(state.form.code,$('count-location').value);if(state.form.key!==key){state.form.key=key;const record=getRecordIndex().byId.get(key);state.form.parents=record?.heads.map(e=>e.event_id)??[];state.form.conflict=record?.conflict??false;const current=record?.current;$('count-mode-label').textContent=current&&current.status!=='deleted'?'AGGIORNA CONTEGGIO':'NUOVO CONTEGGIO';$('existing-warning').hidden=!record||current?.status==='deleted';$('existing-warning').textContent=record?.conflict?'Questa ubicazione ha versioni in conflitto. Chiudi questa scheda e risolvi il conflitto nella sezione Conteggi.':current?`Esiste già un conteggio: ${fmt.format(numericQuantity(current.quantity))} ${current.unit}, registrato da ${current.operator}. Inserisci il nuovo TOTALE per questa ubicazione: non verrà sommato al precedente.`:'';$('save-count').disabled=!!record?.conflict;}}
 async function addLocalEvent(e){const events=mergeEvents(state.events,[e]),pending=[...new Set([...state.pending,e.event_id])];Object.assign(state,await writeState(events,pending));state.syncError='';renderAll();}
 async function saveCount(event){event.preventDefault();$('save-count').disabled=true;try{updateExistingWarning();if(state.form.conflict)throw new Error('Risolvi prima il conflitto nella sezione Conteggi.');const values={item_code:state.form.code,location:$('count-location').value,operator:$('count-operator').value,quantity:$('count-quantity').value,unit:$('count-unit').value==='altro'?$('custom-unit').value:$('count-unit').value,status:$('count-state').value,note:$('count-note').value};const e=makeEvent(values,state.form.parents,{deviceId:state.deviceId}),fromFamily=$('family-dialog').open;await addLocalEvent(e);state.operator=values.operator.trim();state.location=values.location.trim();savePrefs();$('count-dialog').close();if(fromFamily&&state.family){
-  const counted=new Set(allRecords().map(r=>r.item_code));
+  const counted=getRecordIndex().counted;
   const remaining=state.family.items.filter(i=>!counted.has(i.code));
   if(remaining.length){
     const visible=searchCatalog(state.family.items,{query:$('variant-search').value});
@@ -104,8 +147,8 @@ function wire(){
   $('filters-toggle').addEventListener('click',()=>{const expanded=$('catalog-filters').classList.toggle('expanded');$('filters-toggle').setAttribute('aria-expanded',String(expanded));});
   $('clear-search').addEventListener('click',()=>{$('search').value='';renderCatalog(true);$('search').focus();});
   $('photo-view').addEventListener('click',()=>{state.view='photo';renderCatalog(true);});$('list-view').addEventListener('click',()=>{state.view='list';renderCatalog(true);});$('load-more').addEventListener('click',()=>{state.page++;renderCatalog();});
-  $('results').addEventListener('click',e=>{const family=e.target.closest('[data-family]'),count=e.target.closest('[data-count]');if(family)openFamily(family.dataset.family);if(count)openCount(count.dataset.count);});
-  $('variant-list').addEventListener('click',e=>{const b=e.target.closest('[data-count]');if(b)openCount(b.dataset.count);});$('variant-search').addEventListener('input',renderVariants);
+  $('results').addEventListener('click',e=>{const family=e.target.closest('[data-family]'),count=e.target.closest('[data-count]');if(family)openFamily(family.dataset.family);if(count)requestCount(count,count.dataset.count);});
+  $('variant-list').addEventListener('click',e=>{const b=e.target.closest('[data-count]');if(b)requestCount(b,b.dataset.count);});$('variant-search').addEventListener('input',renderVariants);
   $('zoom-button').addEventListener('click',()=>{$('zoom-image').innerHTML=photo(state.family?.picture,{large:true});$('zoom-dialog').showModal();});
   for(const b of document.querySelectorAll('.close-dialog'))b.addEventListener('click',()=>b.closest('dialog').close());
   for(const d of document.querySelectorAll('dialog'))d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});
@@ -114,7 +157,7 @@ function wire(){
   $('disconnect-button').addEventListener('click',()=>{rememberToken('');$('gh-token').value='';updateSync();toast('Token rimosso da questa sessione. I conteggi locali sono conservati.');});
   $('download-config').addEventListener('click',()=>{try{download('config.json',JSON.stringify(formConfig(),null,2),'application/json');toast('Configurazione scaricata senza token. Puoi caricarla nel repository dell’app.');}catch(e){$('settings-error').textContent=e.message;}});
   $('sync-button').addEventListener('click',()=>sync());$('refresh-button').addEventListener('click',()=>sync());
-  $('count-search').addEventListener('input',renderCounts);$('counts-list').addEventListener('click',e=>{const edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]'),resolve=e.target.closest('[data-resolve]');if(edit){const r=allRecords().find(r=>r.id===edit.dataset.edit);if(r)openCount(r.item_code,r.id);}if(del)deleteCount(del.dataset.delete);if(resolve)openConflict(resolve.dataset.resolve);});
+  $('count-search').addEventListener('input',renderCounts);$('counts-list').addEventListener('click',e=>{const edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]'),resolve=e.target.closest('[data-resolve]');if(edit){const r=getRecordIndex().activeById.get(edit.dataset.edit);if(r)requestCount(edit,r.item_code,r.id);}if(del)deleteCount(del.dataset.delete);if(resolve)openConflict(resolve.dataset.resolve);});
   $('conflict-options').addEventListener('click',e=>{const b=e.target.closest('[data-choose-event]');if(b)resolveConflict(b.dataset.chooseEvent);});
   $('export-summary').addEventListener('click',()=>exportData('summary'));$('export-detail').addEventListener('click',()=>exportData('detail'));$('export-backup').addEventListener('click',()=>download(`LEA_Recupero_${safeName(state.config.inventoryId)}_${fileStamp()}.json`,JSON.stringify(backup(),null,2),'application/json'));
   $('import-backup').addEventListener('change',e=>{if(e.target.files[0])importBackup(e.target.files[0]);});

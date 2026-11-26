@@ -27,3 +27,9 @@ dialog{padding:26px;border:1px solid #cfdee2;border-radius:16px;box-shadow:0 25p
 .product-card.has-counts .product-bottom,.product-card.has-counts .product-arrow{color:#286f4a}
 .product-card.has-counts:hover{border-color:#36905d;box-shadow:0 8px 22px #2b72452b}
 .article-row.has-counts,.variant-card.has-counts{background:#eff9f1;border-color:#a8d7b7}
+
+/* Il comando conferma immediatamente il tocco e ignora i clic ripetuti. */
+button.is-opening{cursor:progress;opacity:.92}
+button.is-opening::after{content:'';display:inline-block;width:12px;height:12px;margin-left:8px;vertical-align:-2px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:lea-opening-spin .65s linear infinite}
+@keyframes lea-opening-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){button.is-opening::after{animation:none}}

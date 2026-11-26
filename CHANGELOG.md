@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.9 — 26.11.2026
+
+Apertura più rapida dei conteggi: i record e le unità di misura vengono indicizzati e riutilizzati fino al successivo aggiornamento dei dati, evitando il calcolo dell'intero riepilogo per ogni variante. Il pulsante «Conta questa variante» mostra subito «Apertura…» con indicatore di attività, rimane temporaneamente disabilitato e ignora i doppi clic. La stessa protezione vale per i pulsanti di conteggio nell'elenco e per la modifica di un conteggio. Aggiornata la cache offline per gli smartphone.
+
 ## 1.1.8 — 26.11.2026
 
 Le schede dei prodotti e delle singole varianti assumono uno sfondo verde appena esiste almeno un conteggio attivo (anche di quantità zero). Per i nuovi conteggi l'unità predefinita è «pz»; quando disponibile viene conservata l'unità già usata. Dopo un conteggio da una famiglia con varianti ancora da contare, resta aperto l'elenco delle varianti e viene aggiornato il loro stato. L'app torna al catalogo quando tutte le varianti sono conteggiate. Aggiornati gli URL versionati e la cache offline.
