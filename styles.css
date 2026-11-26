@@ -20,3 +20,10 @@ dialog{padding:26px;border:1px solid #cfdee2;border-radius:16px;box-shadow:0 25p
   .load-more{margin-top:17px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* Il verde indica che almeno una variante dispone di un conteggio attivo. */
+.product-card.has-counts{background:#dff3e5;border-color:#70b58b;box-shadow:0 2px 8px #2e764b12}
+.product-card.has-counts .product-photo{background:#e5f6e9;border-bottom-color:#bfe4ca}
+.product-card.has-counts .product-bottom,.product-card.has-counts .product-arrow{color:#286f4a}
+.product-card.has-counts:hover{border-color:#36905d;box-shadow:0 8px 22px #2b72452b}
+.article-row.has-counts,.variant-card.has-counts{background:#eff9f1;border-color:#a8d7b7}

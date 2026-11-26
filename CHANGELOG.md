@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.8 — 26.11.2026
+
+Le schede dei prodotti e delle singole varianti assumono uno sfondo verde appena esiste almeno un conteggio attivo (anche di quantità zero). Per i nuovi conteggi l'unità predefinita è «pz»; quando disponibile viene conservata l'unità già usata. Dopo un conteggio da una famiglia con varianti ancora da contare, resta aperto l'elenco delle varianti e viene aggiornato il loro stato. L'app torna al catalogo quando tutte le varianti sono conteggiate. Aggiornati gli URL versionati e la cache offline.
+
 ## 1.1.7 — 18.11.2026
 
 Dopo il salvataggio di un conteggio avviato dalla scelta della variante, l’app chiude entrambe le finestre, torna al catalogo e azzera ricerca e filtri per il prodotto successivo. Le modifiche avviate dalla sezione Conteggi restano invece nella sezione corrente.
