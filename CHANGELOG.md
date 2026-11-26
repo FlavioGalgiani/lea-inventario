@@ -1,5 +1,9 @@
 # Modifiche
 
+## 1.1.10 — 26.11.2026
+
+Risolto il potenziale blocco all'apertura della maschera «Conta questa variante» introdotto nella 1.1.9: eliminata l'attesa di due requestAnimationFrame, che su alcune sessioni non terminava e lasciava il comando in attesa. La finestra di conteggio viene ora aperta direttamente al primo clic; resta attiva la protezione dai doppi clic. Eventuali errori sono mostrati nella finestra delle varianti anziché dietro al suo sfondo oscurato. Cache offline e file versionati aggiornati.
+
 ## 1.1.9 — 26.11.2026
 
 Apertura più rapida dei conteggi: i record e le unità di misura vengono indicizzati e riutilizzati fino al successivo aggiornamento dei dati, evitando il calcolo dell'intero riepilogo per ogni variante. Il pulsante «Conta questa variante» mostra subito «Apertura…» con indicatore di attività, rimane temporaneamente disabilitato e ignora i doppi clic. La stessa protezione vale per i pulsanti di conteggio nell'elenco e per la modifica di un conteggio. Aggiornata la cache offline per gli smartphone.

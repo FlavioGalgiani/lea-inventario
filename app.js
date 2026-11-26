@@ -70,27 +70,30 @@ function renderExport(){const sums=summary(state.events,state.catalog),blocked=s
 }
 function renderAll(){updateMetrics();updateSync();renderCatalog();if(state.tab==='counts')renderCounts();if(state.tab==='export')renderExport();}
 function openFamily(key,{query=null}={}){const group=state.groups.get(key);if(!group)return;state.family=group;$('family-title').textContent=group.label;$('family-image').innerHTML=photo(group.picture,{large:true});$('family-file').textContent=group.picture||'Nessuna foto associata';$('zoom-button').disabled=!group.picture;$('variant-search').value=query??[$('search').value,$('dimension').value].filter(Boolean).join(' ');renderVariants();$('family-dialog').showModal();}
-function renderVariants(){if(!state.family)return;const found=searchCatalog(state.family.items,{query:$('variant-search').value}),counted=getRecordIndex().counted,remaining=state.family.items.filter(i=>!counted.has(i.code)).length;$('variant-count').textContent=`${found.length} ${found.length===1?'variante trovata':'varianti trovate'} su ${state.family.items.length}. ${remaining} ${remaining===1?'variante ancora da conteggiare':'varianti ancora da conteggiare'}. Conferma sempre le caratteristiche tecniche.`;
+function renderVariants(){if(!state.family)return;$('variant-count').removeAttribute('role');const found=searchCatalog(state.family.items,{query:$('variant-search').value}),counted=getRecordIndex().counted,remaining=state.family.items.filter(i=>!counted.has(i.code)).length;$('variant-count').textContent=`${found.length} ${found.length===1?'variante trovata':'varianti trovate'} su ${state.family.items.length}. ${remaining} ${remaining===1?'variante ancora da conteggiare':'varianti ancora da conteggiare'}. Conferma sempre le caratteristiche tecniche.`;
   $('variant-list').innerHTML=found.length?found.map(i=>`<article class="variant-card${counted.has(i.code)?' has-counts':''}"><div class="variant-top"><div><span class="code">${esc(i.code)}</span><h3>${esc(i.name)}</h3></div>${counted.has(i.code)?'<span class="badge">Con conteggi</span>':''}</div><p class="specs">${esc(i.dim1)}${i.dim1&&i.dim2?' · ':''}${esc(i.dim2)}</p><p class="article-meta">Vecchio codice: <strong>${esc(i.oldCode||'—')}</strong><br>Codice produttore: <strong>${esc(i.manufacturerCode||'—')}</strong>${i.model?` · Modello ${esc(i.model)}`:''}<br>${esc(i.manufacturer)}</p><div class="variant-actions">${/^https?:\/\//i.test(i.url)?`<a class="supplier-link" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer">Scheda produttore ↗</a>`:'<span></span>'}<button type="button" class="button primary" data-count="${esc(i.code)}">Conta questa variante</button></div></article>`).join(''):'<div class="empty">Nessuna variante corrispondente. Cancella il filtro per vederle tutte.</div>';
 }
 function setUnit(unit){const standard=['pz','m','kg','l','conf','set'];$('count-unit').value=standard.includes(unit)?unit:unit?'altro':'';$('custom-unit').value=standard.includes(unit)?'':unit;$('custom-unit-wrap').hidden=$('count-unit').value!=='altro';$('custom-unit').required=$('count-unit').value==='altro';}
 // Feedback visibile prima di qualsiasi lavoro, con protezione dai doppi clic.
 let openingCount=false;
-async function requestCount(button,code,recordId=null){
+function requestCount(button,code,recordId=null){
   if(!button||openingCount||$('count-dialog').open)return;
+  // Il primo clic apre il dialogo subito: nessuna attesa di requestAnimationFrame.
   openingCount=true;
-  const originalLabel=button.textContent,fromFamily=!!button.closest('#variant-list'),familyKey=state.family?.key;
+  const originalLabel=button.textContent,fromFamily=!!button.closest('#variant-list');
   button.disabled=true;
   button.classList.add('is-opening');
   button.setAttribute('aria-busy','true');
   button.textContent='Apertura…';
   try{
-    // Due frame garantiscono che il feedback si disegni anche sui telefoni meno veloci.
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    if(fromFamily&&(!$('family-dialog').open||state.family?.key!==familyKey))return;
-    if(!$('count-dialog').open)openCount(code,recordId);
+    if(fromFamily&&!$('family-dialog').open)return;
+    openCount(code,recordId);
   }catch(error){
-    toast('Impossibile aprire il conteggio: '+error.message);
+    const message='Impossibile aprire il conteggio: '+error.message;
+    if(fromFamily&&$('family-dialog').open){
+      $('variant-count').textContent=message;
+      $('variant-count').setAttribute('role','alert');
+    }else toast(message);
   }finally{
     openingCount=false;
     if(button.isConnected){
